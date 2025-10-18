@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小兔拼音游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial Rounded MT Bold', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(to bottom, #87CEEB, #E0F7E0);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #8A2BE2;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .instructions {
+            background-color: #F0E6FF;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            color: #555;
+        }
+        
+        .game-selection {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .game-btn {
+            background: linear-gradient(to bottom, #FFB6C1, #FF69B4);
+            border: none;
+            border-radius: 15px;
+            padding: 15px 25px;
+            font-size: 1.2rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin: 10px;
+            flex: 1;
+            min-width: 200px;
+            max-width: 300px;
+        }
+        
+        .game-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .game-btn.active {
+            background: linear-gradient(to bottom, #FF69B4, #8A2BE2);
+            transform: translateY(-3px);
+        }
+        
+        .game-area {
+            display: none;
+            position: relative;
+            min-height: 500px;
+        }
+        
+        .game-area.active {
+            display: block;
+        }
+        
+        .character-display {
+            text-align: center;
+            font-size: 4rem;
+            margin: 20px 0;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .control-btn {
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .play-btn {
+            background: linear-gradient(to bottom, #4CAF50, #2E7D32);
+            color: white;
+        }
+        
+        .check-btn {
+            background: linear-gradient(to bottom, #2196F3, #0D47A1);
+            color: white;
+        }
+        
+        .next-btn {
+            background: linear-gradient(to bottom, #FF9800, #E65100);
+            color: white;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .control-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .baskets-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            perspective: 1000px;
+        }
+        
+        .basket {
+            width: 150px;
+            height: 150px;
+            background-color: #D2691E;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            font-size: 1.8rem;
+            color: #333;
+        }
+        
+        .basket.selected {
+            transform: scale(1.3) translateY(-20px);
+            z-index: 10;
+        }
+        
+        .basket:not(.selected) {
+            transform: scale(0.8) translateY(10px);
+            opacity: 0.7;
+        }
+        
+        .basket-handle {
+            position: absolute;
+            top: -20px;
+            width: 80px;
+            height: 30px;
+            background-color: #8B4513;
+            border-radius: 50%;
+        }
+        
+        .pinyin-display {
+            font-size: 1.5rem;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        
+        .score-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 10px 20px;
+            background-color: #F5F5F5;
+            border-radius: 10px;
+        }
+        
+        .hearts {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .heart {
+            font-size: 2rem;
+            color: #FF5252;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .level {
+            font-size: 1.3rem;
+            color: #8A2BE2;
+            font-weight: bold;
+        }
+        
+        .result-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            display: none;
+        }
+        
+        .result-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .result-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        .result-text {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .result-details {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #555;
+        }
+        
+        .close-result {
+            padding: 10px 20px;
+            background: linear-gradient(to bottom, #8A2BE2, #4B0082);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+        
+        .recording-area {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .microphone {
+            font-size: 3rem;
+            cursor: pointer;
+            margin: 20px 0;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+        
+        .microphone.recording {
+            animation: pulse 0.5s infinite;
+            color: #FF5252;
+        }
+        
+        .recording-status {
+            font-size: 1.2rem;
+            margin-top: 10px;
+            color: #555;
+        }
+        
+        /* 动画元素 */
+        .rabbit {
+            position: absolute;
+            bottom: 50px;
+            left: 50px;
+            font-size: 4rem;
+            z-index: 5;
+            animation: hop 3s infinite;
+        }
+        
+        @keyframes hop {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            25% { transform: translateY(-20px) rotate(-5deg); }
+            50% { transform: translateY(0) rotate(0); }
+            75% { transform: translateY(-10px) rotate(5deg); }
+        }
+        
+        .carrot {
+            position: absolute;
+            bottom: 70px;
+            left: 120px;
+            font-size: 2rem;
+            z-index: 4;
+            animation: wiggle 2s infinite;
+        }
+        
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(0); }
+            25% { transform: rotate(10deg); }
+            75% { transform: rotate(-10deg); }
+        }
+        
+        .tree {
+            position: absolute;
+            bottom: 0;
+            right: 50px;
+            font-size: 5rem;
+            z-index: 3;
+            animation: sway 8s infinite;
+        }
+        
+        @keyframes sway {
+            0%, 100% { transform: rotate(0); }
+            50% { transform: rotate(3deg); }
+        }
+        
+        .flower {
+            position: absolute;
+            bottom: 0;
+            left: 30%;
+            font-size: 2rem;
+            z-index: 2;
+            animation: bloom 5s infinite;
+        }
+        
+        @keyframes bloom {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        
+        .river {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            background: linear-gradient(to right, #1E90FF, #00BFFF);
+            z-index: 1;
+            animation: flow 10s infinite linear;
+        }
+        
+        @keyframes flow {
+            0% { background-position: 0 0; }
+            100% { background-position: 100px 0; }
+        }
+        
+        .firework {
+            position: fixed;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        @keyframes explode {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .game-selection {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .game-btn {
+                width: 100%;
+                max-width: 100%;
+            }
+            
+            .baskets-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+            }
+            
+            .basket {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .character-display {
+                font-size: 3rem;
+            }
+            
+            .controls {
+                flex-wrap: wrap;
+            }
+            
+            .rabbit, .tree, .flower {
+                font-size: 2.5rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .character-display {
+                font-size: 2.5rem;
+            }
+            
+            .basket {
+                width: 100px;
+                height: 100px;
+                font-size: 1.5rem;
+            }
+            
+            .pinyin-display {
+                font-size: 1.2rem;
+            }
+            
+            .control-btn {
+                padding: 10px 15px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>小兔拼音游戏</h1>
+            <div class="instructions">
+                帮小兔子收获胡萝卜（根据听到的语音选择有正确拼音的篮子）
+            </div>
+        </header>
+        
+        <div class="game-selection">
+            <button class="game-btn" data-game="tone1-4">第一声 + 第四声区别游戏</button>
+            <button class="game-btn" data-game="tone2-3">第二声 + 第三声区别游戏</button>
+            <button class="game-btn" data-game="pronunciation">朗读练习</button>
+        </div>
+        
+        <!-- 第一声和第四声游戏区域 -->
+        <div id="tone1-4" class="game-area">
+            <div class="character-display" id="char-display-1"></div>
+            
+            <div class="controls">
+                <button class="control-btn play-btn" id="play-1">播放发音</button>
+                <button class="control-btn check-btn" id="check-1">检查</button>
+                <button class="control-btn next-btn" id="next-1">下一题</button>
+            </div>
+            
+            <div class="baskets-container" id="baskets-1">
+                <!-- 篮子将通过JS动态生成 -->
+            </div>
+            
+            <div class="score-area">
+                <div class="hearts" id="hearts-1">
+                    <!-- 红心将通过JS动态生成 -->
+                </div>
+                <div class="score">得分: <span id="score-1">0</span></div>
+                <div class="level">等级: <span id="level-1">1</span></div>
+            </div>
+        </div>
+        
+        <!-- 第二声和第三声游戏区域 -->
+        <div id="tone2-3" class="game-area">
+            <div class="character-display" id="char-display-2"></div>
+            
+            <div class="controls">
+                <button class="control-btn play-btn" id="play-2">播放发音</button>
+                <button class="control-btn check-btn" id="check-2">检查</button>
+                <button class="control-btn next-btn" id="next-2">下一题</button>
+            </div>
+            
+            <div class="baskets-container" id="baskets-2">
+                <!-- 篮子将通过JS动态生成 -->
+            </div>
+            
+            <div class="score-area">
+                <div class="hearts" id="hearts-2">
+                    <!-- 红心将通过JS动态生成 -->
+                </div>
+                <div class="score">得分: <span id="score-2">0</span></div>
+                <div class="level">等级: <span id="level-2">1</span></div>
+            </div>
+        </div>
+        
+        <!-- 朗读练习区域 -->
+        <div id="pronunciation" class="game-area">
+            <div class="character-display" id="char-display-3">
+                <div id="word-display"></div>
+                <div id="pinyin-display"></div>
+                <div id="meaning-display"></div>
+            </div>
+            
+            <div class="recording-area">
+                <div class="microphone" id="microphone">🎤</div>
+                <div class="recording-status" id="recording-status">点击麦克风开始录音</div>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn play-btn" id="play-3">播放正确发音</button>
+                <button class="control-btn check-btn" id="check-3">检查</button>
+                <button class="control-btn next-btn" id="next-3">下一题</button>
+            </div>
+            
+            <div class="score-area">
+                <div class="hearts" id="hearts-3">
+                    <!-- 红心将通过JS动态生成 -->
+                </div>
+                <div class="score">得分: <span id="score-3">0</span></div>
+                <div class="level">等级: <span id="level-3">1</span></div>
+            </div>
+        </div>
+        
+        <!-- 动画元素 -->
+        <div class="rabbit">🐰</div>
+        <div class="carrot">🥕</div>
+        <div class="tree">🌲</div>
+        <div class="flower">🌷</div>
+        <div class="river"></div>
+        
+        <!-- 结果弹窗 -->
+        <div class="result-overlay" id="result-overlay">
+            <div class="result-content">
+                <div class="result-icon" id="result-icon"></div>
+                <div class="result-text" id="result-text"></div>
+                <div class="result-details" id="result-details"></div>
+                <button class="close-result" id="close-result">继续</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // HSK1-HSK2 词库
+        const wordDatabase = {
+            // 第一声和第四声词库
+            "tone1-4": [
+                { character: "爸爸", pinyin: "bàba", meaning: "bố", tone: "4" },
+                { character: "妈妈", pinyin: "māma", meaning: "mẹ", tone: "1" },
+                { character: "哥哥", pinyin: "gēge", meaning: "anh trai", tone: "1" },
+                { character: "弟弟", pinyin: "dìdi", meaning: "em trai", tone: "4" },
+                { character: "老师", pinyin: "lǎoshī", meaning: "giáo viên", tone: "3-1" },
+                { character: "学生", pinyin: "xuésheng", meaning: "học sinh", tone: "2-1" },
+                { character: "中国", pinyin: "Zhōngguó", meaning: "Trung Quốc", tone: "1-2" },
+                { character: "北京", pinyin: "Běijīng", meaning: "Bắc Kinh", tone: "3-1" },
+                { character: "上海", pinyin: "Shànghǎi", meaning: "Thượng Hải", tone: "4-3" },
+                { character: "今天", pinyin: "jīntiān", meaning: "hôm nay", tone: "1-1" },
+                { character: "明天", pinyin: "míngtiān", meaning: "ngày mai", tone: "2-1" },
+                { character: "昨天", pinyin: "zuótiān", meaning: "hôm qua", tone: "2-1" },
+                { character: "现在", pinyin: "xiànzài", meaning: "bây giờ", tone: "4-4" },
+                { character: "时候", pinyin: "shíhou", meaning: "thời gian", tone: "2-0" },
+                { character: "谢谢", pinyin: "xièxie", meaning: "cảm ơn", tone: "4-0" },
+                { character: "再见", pinyin: "zàijiàn", meaning: "tạm biệt", tone: "4-4" },
+                { character: "对不起", pinyin: "duìbuqǐ", meaning: "xin lỗi", tone: "4-0-3" },
+                { character: "没关系", pinyin: "méiguānxi", meaning: "không sao", tone: "2-1-0" },
+                { character: "朋友", pinyin: "péngyou", meaning: "bạn bè", tone: "2-0" },
+                { character: "学校", pinyin: "xuéxiào", meaning: "trường học", tone: "2-4" }
+            ],
+            
+            // 第二声和第三声词库
+            "tone2-3": [
+                { character: "你好", pinyin: "nǐhǎo", meaning: "xin chào", tone: "3-3" },
+                { character: "很好", pinyin: "hěnhǎo", meaning: "rất tốt", tone: "3-3" },
+                { character: "可以", pinyin: "kěyǐ", meaning: "có thể", tone: "3-3" },
+                { character: "没有", pinyin: "méiyǒu", meaning: "không có", tone: "2-3" },
+                { character: "我们", pinyin: "wǒmen", meaning: "chúng tôi", tone: "3-0" },
+                { character: "你们", pinyin: "nǐmen", meaning: "các bạn", tone: "3-0" },
+                { character: "他们", pinyin: "tāmen", meaning: "họ", tone: "1-0" },
+                { character: "什么", pinyin: "shénme", meaning: "cái gì", tone: "2-0" },
+                { character: "为什么", pinyin: "wèishénme", meaning: "tại sao", tone: "4-2-0" },
+                { character: "怎么", pinyin: "zěnme", meaning: "như thế nào", tone: "3-0" },
+                { character: "哪里", pinyin: "nǎlǐ", meaning: "ở đâu", tone: "3-3" },
+                { character: "这里", pinyin: "zhèlǐ", meaning: "ở đây", tone: "4-3" },
+                { character: "那里", pinyin: "nàlǐ", meaning: "ở đó", tone: "4-3" },
+                { character: "多少", pinyin: "duōshǎo", meaning: "bao nhiêu", tone: "1-3" },
+                { character: "大小", pinyin: "dàxiǎo", meaning: "kích thước", tone: "4-3" },
+                { character: "左右", pinyin: "zuǒyòu", meaning: "trái phải", tone: "3-4" },
+                { character: "前后", pinyin: "qiánhòu", meaning: "trước sau", tone: "2-4" },
+                { character: "上下", pinyin: "shàngxià", meaning: "trên dưới", tone: "4-4" },
+                { character: "东西", pinyin: "dōngxi", meaning: "đồ vật", tone: "1-0" },
+                { character: "南北", pinyin: "nánběi", meaning: "nam bắc", tone: "2-3" }
+            ],
+            
+            // 朗读练习词库
+            "pronunciation": [
+                { character: "你好", pinyin: "nǐhǎo", meaning: "xin chào" },
+                { character: "谢谢", pinyin: "xièxie", meaning: "cảm ơn" },
+                { character: "再见", pinyin: "zàijiàn", meaning: "tạm biệt" },
+                { character: "对不起", pinyin: "duìbuqǐ", meaning: "xin lỗi" },
+                { character: "没关系", pinyin: "méiguānxi", meaning: "không sao" },
+                { character: "请问", pinyin: "qǐngwèn", meaning: "xin hỏi" },
+                { character: "不客气", pinyin: "búkèqi", meaning: "không có gì" },
+                { character: "中国", pinyin: "Zhōngguó", meaning: "Trung Quốc" },
+                { character: "北京", pinyin: "Běijīng", meaning: "Bắc Kinh" },
+                { character: "上海", pinyin: "Shànghǎi", meaning: "Thượng Hải" },
+                { character: "老师", pinyin: "lǎoshī", meaning: "giáo viên" },
+                { character: "学生", pinyin: "xuésheng", meaning: "học sinh" },
+                { character: "朋友", pinyin: "péngyou", meaning: "bạn bè" },
+                { character: "爸爸", pinyin: "bàba", meaning: "bố" },
+                { character: "妈妈", pinyin: "māma", meaning: "mẹ" },
+                { character: "哥哥", pinyin: "gēge", meaning: "anh trai" },
+                { character: "弟弟", pinyin: "dìdi", meaning: "em trai" },
+                { character: "姐姐", pinyin: "jiějie", meaning: "chị gái" },
+                { character: "妹妹", pinyin: "mèimei", meaning: "em gái" },
+                { character: "今天", pinyin: "jīntiān", meaning: "hôm nay" },
+                { character: "明天", pinyin: "míngtiān", meaning: "ngày mai" },
+                { character: "昨天", pinyin: "zuótiān", meaning: "hôm qua" },
+                { character: "现在", pinyin: "xiànzài", meaning: "bây giờ" },
+                { character: "时候", pinyin: "shíhou", meaning: "thời gian" },
+                { character: "什么", pinyin: "shénme", meaning: "cái gì" },
+                { character: "为什么", pinyin: "wèishénme", meaning: "tại sao" },
+                { character: "怎么", pinyin: "zěnme", meaning: "như thế nào" },
+                { character: "哪里", pinyin: "nǎlǐ", meaning: "ở đâu" },
+                { character: "这里", pinyin: "zhèlǐ", meaning: "ở đây" },
+                { character: "那里", pinyin: "nàlǐ", meaning: "ở đó" }
+            ]
+        };
+
+        // 游戏状态
+        const gameState = {
+            currentGame: null,
+            currentWord: null,
+            selectedBasket: null,
+            score: 0,
+            level: 1,
+            hearts: 5,
+            wordIndex: 0
+        };
+
+        // 初始化游戏
+        function initGame() {
+            // 游戏选择按钮事件
+            document.querySelectorAll('.game-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const gameId = this.getAttribute('data-game');
+                    switchGame(gameId);
+                });
+            });
+            
+            // 初始化三个游戏区域
+            initTone14Game();
+            initTone23Game();
+            initPronunciationGame();
+            
+            // 默认显示第一个游戏
+            switchGame('tone1-4');
+        }
+
+        // 切换游戏
+        function switchGame(gameId) {
+            // 隐藏所有游戏区域
+            document.querySelectorAll('.game-area').forEach(area => {
+                area.classList.remove('active');
+            });
+            
+            // 移除所有按钮的active类
+            document.querySelectorAll('.game-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 显示选中的游戏区域
+            document.getElementById(gameId).classList.add('active');
+            
+            // 为选中的按钮添加active类
+            document.querySelector(`.game-btn[data-game="${gameId}"]`).classList.add('active');
+            
+            // 重置游戏状态
+            resetGameState();
+            
+            // 设置当前游戏
+            gameState.currentGame = gameId;
+            
+            // 加载新题目
+            loadNewQuestion();
+        }
+
+        // 重置游戏状态
+        function resetGameState() {
+            gameState.currentWord = null;
+            gameState.selectedBasket = null;
+            gameState.score = 0;
+            gameState.level = 1;
+            gameState.hearts = 5;
+            gameState.wordIndex = 0;
+            
+            // 更新UI
+            updateScoreDisplay();
+            updateHeartsDisplay();
+            updateLevelDisplay();
+        }
+
+        // 初始化第一声和第四声游戏
+        function initTone14Game() {
+            const playBtn = document.getElementById('play-1');
+            const checkBtn = document.getElementById('check-1');
+            const nextBtn = document.getElementById('next-1');
+            const basketsContainer = document.getElementById('baskets-1');
+            
+            playBtn.addEventListener('click', playCurrentWord);
+            checkBtn.addEventListener('click', checkAnswer);
+            nextBtn.addEventListener('click', loadNewQuestion);
+            
+            // 初始化红心
+            initHearts('hearts-1');
+        }
+
+        // 初始化第二声和第三声游戏
+        function initTone23Game() {
+            const playBtn = document.getElementById('play-2');
+            const checkBtn = document.getElementById('check-2');
+            const nextBtn = document.getElementById('next-2');
+            const basketsContainer = document.getElementById('baskets-2');
+            
+            playBtn.addEventListener('click', playCurrentWord);
+            checkBtn.addEventListener('click', checkAnswer);
+            nextBtn.addEventListener('click', loadNewQuestion);
+            
+            // 初始化红心
+            initHearts('hearts-2');
+        }
+
+        // 初始化朗读练习游戏
+        function initPronunciationGame() {
+            const playBtn = document.getElementById('play-3');
+            const checkBtn = document.getElementById('check-3');
+            const nextBtn = document.getElementById('next-3');
+            const microphone = document.getElementById('microphone');
+            
+            playBtn.addEventListener('click', playCurrentWord);
+            checkBtn.addEventListener('click', checkPronunciation);
+            nextBtn.addEventListener('click', loadNewQuestion);
+            microphone.addEventListener('click', toggleRecording);
+            
+            // 初始化红心
+            initHearts('hearts-3');
+        }
+
+        // 初始化红心显示
+        function initHearts(heartsId) {
+            const heartsContainer = document.getElementById(heartsId);
+            heartsContainer.innerHTML = '';
+            
+            for (let i = 0; i < 5; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.textContent = '❤';
+                heartsContainer.appendChild(heart);
+            }
+        }
+
+        // 加载新题目
+        function loadNewQuestion() {
+            const gameId = gameState.currentGame;
+            const words = wordDatabase[gameId];
+            
+            if (gameState.wordIndex >= words.length) {
+                gameState.wordIndex = 0; // 循环词库
+            }
+            
+            gameState.currentWord = words[gameState.wordIndex];
+            gameState.wordIndex++;
+            
+            // 更新字符显示
+            if (gameId === 'pronunciation') {
+                document.getElementById('word-display').textContent = gameState.currentWord.character;
+                document.getElementById('pinyin-display').textContent = gameState.currentWord.pinyin;
+                document.getElementById('meaning-display').textContent = gameState.currentWord.meaning;
+            } else {
+                document.getElementById(`char-display-${gameId === 'tone1-4' ? '1' : '2'}`).textContent = gameState.currentWord.character;
+            }
+            
+            // 生成篮子选项（仅针对声调游戏）
+            if (gameId !== 'pronunciation') {
+                generateBaskets(gameId);
+            }
+            
+            // 重置选择
+            gameState.selectedBasket = null;
+        }
+
+        // 生成篮子选项
+        function generateBaskets(gameId) {
+            const basketsContainer = document.getElementById(`baskets-${gameId === 'tone1-4' ? '1' : '2'}`);
+            basketsContainer.innerHTML = '';
+            
+            const correctPinyin = gameState.currentWord.pinyin;
+            
+            // 生成两个错误拼音选项
+            const wrongOptions = generateWrongPinyinOptions(correctPinyin, gameId);
+            
+            // 合并选项并随机排序
+            const options = [correctPinyin, ...wrongOptions];
+            shuffleArray(options);
+            
+            // 创建篮子
+            options.forEach((pinyin, index) => {
+                const basket = document.createElement('div');
+                basket.className = 'basket';
+                basket.innerHTML = `
+                    <div class="basket-handle"></div>
+                    <div class="pinyin-display">${pinyin}</div>
+                `;
+                
+                basket.addEventListener('click', () => {
+                    selectBasket(basket, pinyin);
+                });
+                
+                basketsContainer.appendChild(basket);
+            });
+        }
+
+        // 生成错误的拼音选项
+        function generateWrongPinyinOptions(correctPinyin, gameId) {
+            const words = wordDatabase[gameId];
+            const wrongOptions = [];
+            
+            // 从词库中随机选择两个不同的拼音
+            while (wrongOptions.length < 2) {
+                const randomIndex = Math.floor(Math.random() * words.length);
+                const randomPinyin = words[randomIndex].pinyin;
+                
+                if (randomPinyin !== correctPinyin && !wrongOptions.includes(randomPinyin)) {
+                    wrongOptions.push(randomPinyin);
+                }
+            }
+            
+            return wrongOptions;
+        }
+
+        // 选择篮子
+        function selectBasket(basket, pinyin) {
+            // 重置所有篮子的状态
+            document.querySelectorAll('.basket').forEach(b => {
+                b.classList.remove('selected');
+            });
+            
+            // 设置选中的篮子
+            basket.classList.add('selected');
+            gameState.selectedBasket = pinyin;
+        }
+
+        // 播放当前词语的发音
+        function playCurrentWord() {
+            if (!gameState.currentWord) return;
+            
+            const utterance = new SpeechSynthesisUtterance(gameState.currentWord.character);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 0.9;
+            
+            // 尝试选择中文语音
+            const voices = speechSynthesis.getVoices();
+            const chineseVoice = voices.find(voice => voice.lang.includes('zh'));
+            if (chineseVoice) {
+                utterance.voice = chineseVoice;
+            }
+            
+            speechSynthesis.speak(utterance);
+        }
+
+        // 检查答案（声调游戏）
+        function checkAnswer() {
+            if (!gameState.selectedBasket) {
+                showResult('请先选择一个篮子！', '⚠️', '');
+                return;
+            }
+            
+            const isCorrect = gameState.selectedBasket === gameState.currentWord.pinyin;
+            
+            if (isCorrect) {
+                gameState.score += 10;
+                updateScoreDisplay();
+                
+                // 检查是否升级
+                if (gameState.score >= gameState.level * 50) {
+                    gameState.level++;
+                    updateLevelDisplay();
+                }
+                
+                showResult('正确！', '✅☺️', `${gameState.currentWord.character} (${gameState.currentWord.pinyin}) → ${gameState.currentWord.meaning}`);
+                
+                // 检查是否完成游戏
+                if (gameState.level > 3) {
+                    setTimeout(() => {
+                        showWin();
+                    }, 1500);
+                }
+            } else {
+                gameState.hearts--;
+                updateHeartsDisplay();
+                
+                showResult('错误！', '😭', `正确答案: ${gameState.currentWord.character} (${gameState.currentWord.pinyin}) → ${gameState.currentWord.meaning}`);
+                
+                // 检查是否游戏结束
+                if (gameState.hearts <= 0) {
+                    setTimeout(() => {
+                        showGameOver();
+                    }, 1500);
+                }
+            }
+        }
+
+        // 检查发音（朗读练习）
+        function checkPronunciation() {
+            // 这里简化处理，实际应该使用语音识别API
+            // 由于语音识别API需要服务器支持，这里使用模拟检查
+            const isCorrect = Math.random() > 0.3; // 70%的正确率模拟
+            
+            if (isCorrect) {
+                gameState.score += 10;
+                updateScoreDisplay();
+                
+                // 检查是否升级
+                if (gameState.score >= gameState.level * 50) {
+                    gameState.level++;
+                    updateLevelDisplay();
+                }
+                
+                showResult('发音正确！', '✅☺️', `${gameState.currentWord.character} (${gameState.currentWord.pinyin}) → ${gameState.currentWord.meaning}`);
+                
+                // 检查是否完成游戏
+                if (gameState.level > 3) {
+                    setTimeout(() => {
+                        showWin();
+                    }, 1500);
+                }
+            } else {
+                gameState.hearts--;
+                updateHeartsDisplay();
+                
+                showResult('发音不正确！', '❌😭', `正确发音: ${gameState.currentWord.character} (${gameState.currentWord.pinyin})`);
+                
+                // 播放正确发音
+                playCurrentWord();
+                
+                // 检查是否游戏结束
+                if (gameState.hearts <= 0) {
+                    setTimeout(() => {
+                        showGameOver();
+                    }, 1500);
+                }
+            }
+        }
+
+        // 切换录音状态
+        function toggleRecording() {
+            const microphone = document.getElementById('microphone');
+            const status = document.getElementById('recording-status');
+            
+            if (microphone.classList.contains('recording')) {
+                // 停止录音
+                microphone.classList.remove('recording');
+                status.textContent = '录音已停止';
+            } else {
+                // 开始录音
+                microphone.classList.add('recording');
+                status.textContent = '录音中...';
+                
+                // 模拟录音过程
+                setTimeout(() => {
+                    if (microphone.classList.contains('recording')) {
+                        microphone.classList.remove('recording');
+                        status.textContent = '录音完成，点击检查按钮验证发音';
+                    }
+                }, 3000);
+            }
+        }
+
+        // 更新分数显示
+        function updateScoreDisplay() {
+            const gameId = gameState.currentGame;
+            const scoreElement = document.getElementById(`score-${gameId === 'tone1-4' ? '1' : gameId === 'tone2-3' ? '2' : '3'}`);
+            scoreElement.textContent = gameState.score;
+        }
+
+        // 更新红心显示
+        function updateHeartsDisplay() {
+            const gameId = gameState.currentGame;
+            const heartsContainer = document.getElementById(`hearts-${gameId === 'tone1-4' ? '1' : gameId === 'tone2-3' ? '2' : '3'}`);
+            const hearts = heartsContainer.querySelectorAll('.heart');
+            
+            hearts.forEach((heart, index) => {
+                if (index < gameState.hearts) {
+                    heart.style.visibility = 'visible';
+                } else {
+                    heart.style.visibility = 'hidden';
+                }
+            });
+        }
+
+        // 更新等级显示
+        function updateLevelDisplay() {
+            const gameId = gameState.currentGame;
+            const levelElement = document.getElementById(`level-${gameId === 'tone1-4' ? '1' : gameId === 'tone2-3' ? '2' : '3'}`);
+            levelElement.textContent = gameState.level;
+        }
+
+        // 显示结果
+        function showResult(text, icon, details) {
+            const overlay = document.getElementById('result-overlay');
+            const resultIcon = document.getElementById('result-icon');
+            const resultText = document.getElementById('result-text');
+            const resultDetails = document.getElementById('result-details');
+            
+            resultIcon.textContent = icon;
+            resultText.textContent = text;
+            resultDetails.textContent = details;
+            
+            overlay.style.display = 'flex';
+            
+            // 点击关闭按钮
+            document.getElementById('close-result').onclick = function() {
+                overlay.style.display = 'none';
+            };
+        }
+
+        // 显示游戏结束
+        function showGameOver() {
+            const overlay = document.getElementById('result-overlay');
+            const resultIcon = document.getElementById('result-icon');
+            const resultText = document.getElementById('result-text');
+            const resultDetails = document.getElementById('result-details');
+            
+            resultIcon.textContent = '💔';
+            resultText.textContent = '游戏结束 - GAME OVER';
+            resultDetails.textContent = '你的红心已经用完了，再试一次吧！';
+            
+            overlay.style.display = 'flex';
+            
+            // 点击关闭按钮重新开始游戏
+            document.getElementById('close-result').onclick = function() {
+                overlay.style.display = 'none';
+                resetGameState();
+                loadNewQuestion();
+            };
+        }
+
+        // 显示胜利
+        function showWin() {
+            const overlay = document.getElementById('result-overlay');
+            const resultIcon = document.getElementById('result-icon');
+            const resultText = document.getElementById('result-text');
+            const resultDetails = document.getElementById('result-details');
+            
+            resultIcon.textContent = '🎉';
+            resultText.textContent = '恭喜已完成游戏 - YOU WIN';
+            resultDetails.textContent = '你成功完成了所有关卡！';
+            
+            overlay.style.display = 'flex';
+            
+            // 放烟花
+            createFireworks();
+            
+            // 点击关闭按钮重新开始游戏
+            document.getElementById('close-result').onclick = function() {
+                overlay.style.display = 'none';
+                resetGameState();
+                loadNewQuestion();
+            };
+        }
+
+        // 创建烟花效果
+        function createFireworks() {
+            const colors = ['#FF5252', '#FF9800', '#FFEB3B', '#4CAF50', '#2196F3', '#9C27B0'];
+            
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const firework = document.createElement('div');
+                    firework.className = 'firework';
+                    firework.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    firework.style.left = Math.random() * 100 + 'vw';
+                    firework.style.top = Math.random() * 100 + 'vh';
+                    
+                    // 随机爆炸方向
+                    const tx = (Math.random() - 0.5) * 200;
+                    const ty = (Math.random() - 0.5) * 200;
+                    firework.style.setProperty('--tx', tx + 'px');
+                    firework.style.setProperty('--ty', ty + 'px');
+                    
+                    firework.style.animation = `explode 1s forwards`;
+                    document.body.appendChild(firework);
+                    
+                    // 动画结束后移除元素
+                    setTimeout(() => {
+                        firework.remove();
+                    }, 1000);
+                }, i * 100);
+            }
+        }
+
+        // 辅助函数：打乱数组
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // 页面加载完成后初始化游戏
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
